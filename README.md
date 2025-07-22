@@ -1,7 +1,7 @@
 # 🧠 Circular Failure Prediction in ICU Patients
 
 This repository contains the code and models developed for the project:  
-**"Early Prediction of Circulatory Failure in ICU Using Transformer-Based Neural Networks"**.
+**"Predicting Circulatory Failure in ICU Patients with Deep Sequential Models"**.
 
 > 🚑 The goal is to anticipate circulatory deterioration in critically ill patients up to **8 hours in advance**, using ICU data from the **MIMIC-IV** database.
 
