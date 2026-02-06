@@ -14,7 +14,7 @@ __pycache__/
 
 # Data / outputs (kept in repo per current request)
 /data/
-/outputs/
+/outputs/**
 /_archive_local/
 
 # Large data formats (kept in repo per current request)
@@ -35,3 +35,14 @@ __pycache__/
 Thumbs.db
 
 !.env.example
+
+# Allow publishable outputs (metrics/figures only)
+!outputs/
+!outputs/*/
+!outputs/*/reports/
+!outputs/*/reports/**
+!outputs/*/clustering/
+!outputs/*/clustering/minirocket/
+!outputs/*/clustering/minirocket/clusters_minirocket/
+!outputs/*/clustering/minirocket/clusters_minirocket/*.csv
+!outputs/*/clustering/minirocket/clusters_minirocket/*.json
