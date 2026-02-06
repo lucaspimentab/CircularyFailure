@@ -33,3 +33,5 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+
+!.env.example
