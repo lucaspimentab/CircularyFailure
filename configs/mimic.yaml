@@ -1,0 +1,46 @@
+﻿dataset: mimic
+input_dir: ${DATA_DIR}/mimic
+features_dir: ${OUTPUT_DIR}/mimic/preprocess/batches/features_filtered
+output_dir: ${OUTPUT_DIR}/mimic
+columns:
+  id_col: stay_id
+  time_col: charttime
+  mbp_col: mbp
+  vaso_col: vasopressor_ativo
+  lactate_col: lab_50813
+  falencia_col: falencia
+features:
+  keep_cols_file: src/datasets/mimic/metadata/columns_list_mimic.csv
+  drop_suffixes:
+  - _imputed
+  drop_cols:
+  - stay_id
+  - charttime
+  - falencia
+  - mortality
+  - falencia_point
+  - falencia_any
+  engineered:
+    enabled: true
+    dir: ${OUTPUT_DIR}/mimic/preprocess/engineered_features
+    patterns:
+    - n_meas_
+    - min_
+    - max_
+    - mean_
+    - _instab
+    - _intens
+    - _cumul
+    agg: last
+    drop_cols:
+    - stay_id
+    - charttime
+    - falencia
+    - mortality
+    - falencia_point
+    - falencia_any
+minirocket:
+  use_engineered: true
+
+etl:
+  h5: ${OUTPUT_DIR}/mimic/preprocess/h5/dataset_mimic.h5

@@ -1,0 +1,68 @@
+dataset: nwicu
+input_dir: ${DATA_DIR}/nwicu
+features_dir: ${OUTPUT_DIR}/nwicu/preprocess/batches/features_filtered
+output_dir: ${OUTPUT_DIR}/nwicu
+columns:
+  id_col: stay_id
+  time_col: charttime
+  mbp_col: mbp
+  vaso_col: vasopressor_ativo
+  lactate_col: lab_50813
+  falencia_col: falencia
+nwicu:
+  grid_minutes: 5
+  fe_window: 12
+features:
+  keep_cols_file: src/datasets/nwicu/metadata/columns_list_nwicu.csv
+  drop_suffixes:
+  - _imputed
+  drop_cols:
+  - stay_id
+  - charttime
+  - falencia
+  - mortality
+  - falencia_point
+  - falencia_any
+  - bmi
+  - bmi_imputed
+  - n_meas_bmi
+  - min_bmi
+  - max_bmi
+  - mean_bmi
+  - bmi_instab
+  - bmi_intens
+  - bmi_cumul
+  engineered:
+    enabled: true
+    dir: ${OUTPUT_DIR}/nwicu/preprocess/engineered_features
+    patterns:
+    - n_meas_
+    - min_
+    - max_
+    - mean_
+    - _instab
+    - _intens
+    - _cumul
+    agg: last
+    drop_cols:
+    - stay_id
+    - charttime
+    - falencia
+    - mortality
+    - falencia_point
+    - falencia_any
+    - bmi
+    - bmi_imputed
+    - n_meas_bmi
+    - min_bmi
+    - max_bmi
+    - mean_bmi
+    - bmi_instab
+    - bmi_intens
+    - bmi_cumul
+minirocket:
+  use_engineered: true
+
+etl:
+  h5: ${OUTPUT_DIR}/nwicu/preprocess/h5/dataset_features.h5
+

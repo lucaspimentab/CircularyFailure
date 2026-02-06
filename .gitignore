@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Env
+.env
+.env.*
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data / outputs (kept in repo per current request)
+/data/
+/outputs/
+/_archive_local/
+
+# Large data formats (kept in repo per current request)
+*.h5
+*.hdf5
+*.parquet
+*.npy
+*.npz
+*.pt
+*.pth
+*.ckpt
+
+# Logs (kept in repo per current request)
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

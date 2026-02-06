@@ -1,0 +1,275 @@
+RELATORIO COMPLETO - FENOTIPOS DE FALENCIA CIRCULATORIA (MIMIC -> VALIDACAO eICU/NWICU)
+Gerado em: 2026-02-04 16:20:40
+
+============================================================
+1) OBJETIVO CLINICO E CIENTIFICO
+============================================================
+Objetivo principal: identificar fenotipos de pacientes associados a falencia circulatoria em MIMIC usando representacoes temporais (MiniRocket) + KMeans, e avaliar validacao externa em eICU e NWICU.
+
+Objetivos especificos:
+- gerar clusters temporais K=2..6 em cada base;
+- escolher K com base em separabilidade (silhouette/CH/DB) e interpretabilidade clinica;
+- descrever fenotipos por perfil de exames/sinais;
+- comparar desfechos por cluster: mortalidade e 3 definicoes de falencia;
+- verificar transportabilidade MIMIC -> eICU e MIMIC -> NWICU (validacao externa).
+
+============================================================
+2) DEFINICOES DE DESFECHO (FALENCIA)
+============================================================
+No seu fluxo atual, foram considerados 3 desfechos por stay:
+1. falencia_normal: flag existente no parquet (evento binario agregado em algum momento da interna??o).
+2. falencia_2of3_45min: regra 2/3 em janela de 45 min (MAP<=65 ou vasopressor) E lactato>=2.
+3. falencia_2of3_60min: mesma regra 2/3, janela de 60 min.
+
+Obs importante: para dados de 5 em 5 min, a regra de 45 min preserva melhor granularidade temporal; a de 60 min tende a suavizar/atrasar deteccao.
+
+============================================================
+3) DADOS E TAMANHO DAS COORTES
+============================================================
+- MIMIC stays no resumo final: 72,580
+- eICU stays no resumo final:  194,739
+- NWICU stays no resumo final: 17,688
+
+Prevalencia global por base (em nivel de stay):
+- MIMIC: falencia_normal=0.758, falencia_45=0.286, falencia_60=0.282, mortalidade=0.070
+- eICU:  falencia_normal=0.169, falencia_45=0.069, falencia_60=0.068, mortalidade=0.090
+- NWICU: falencia_normal=0.352, falencia_45=0.057, falencia_60=0.057, mortalidade=0.229
+
+Leitura tecnica: as prevalencias de falencia sao substancialmente maiores em MIMIC; mortalidade global ficou levemente maior em eICU e muito maior em NWICU. Isso ja indica shift de coorte/medicao/labeling.
+
+============================================================
+4) QUALIDADE DE CLUSTER (K=2..6)
+============================================================
+MIMIC - metricas de selecao de K:
+ silhouette  calinski_harabasz  davies_bouldin  n_clusters clusterer  k
+   0.500867      101722.921674        0.750551           2    kmeans  2
+   0.331424       68892.254255        1.123546           3    kmeans  3
+   0.252489       53242.306882        1.779212           4    kmeans  4
+   0.224594       41627.843686        2.174102           5    kmeans  5
+   0.220730       38523.390667        1.992351           6    kmeans  6
+
+eICU - metricas de selecao de K:
+ silhouette  calinski_harabasz  davies_bouldin  n_clusters clusterer  k
+   0.414172      166643.654431        1.003218           2    kmeans  2
+   0.271174      108948.861392        1.490589           3    kmeans  3
+   0.256288       80842.586461        2.378220           4    kmeans  4
+   0.180052       65469.232884        2.319005           5    kmeans  5
+   0.170799       54701.002105        2.638249           6    kmeans  6
+
+NWICU - metricas de selecao de K:
+ silhouette  calinski_harabasz  davies_bouldin  n_clusters clusterer  k
+   0.227897        6126.602096        2.466228           4    kmeans  4
+
+Conclusao metrica pura: melhor silhouette em ambas as bases foi K=2 (K=2).
+Porem, para fenotipos clinicos mais granulares, K=4 eh um tradeoff aceitavel entre separacao e interpretabilidade (especialmente para estratificacao de risco moderado/alto). Em NWICU apenas K=4 foi executado com metricas finais.
+
+============================================================
+5) RESULTADOS PRINCIPAIS K=4 - MIMIC
+============================================================
+Desfechos por cluster (MIMIC, K=4):
+ cluster     n  falencia_normal_rate  falencia_45_rate  falencia_60_rate  mortality_rate
+       0 12578              0.832088          0.428208          0.424074        0.073382
+       1 15914              0.726656          0.235390          0.231683        0.051904
+       2 30687              0.816046          0.313553          0.309480        0.050412
+       3 13401              0.594582          0.148123          0.147750        0.134393
+
+Leitura clinica MIMIC (K=4):
+- Cluster 0: maior falencia 45/60 e falencia_normal muito alta; mortalidade intermediaria.
+- Cluster 1: menor risco intermediario (falencia e mortalidade mais baixas).
+- Cluster 2: risco de falencia moderado-alto com mortalidade baixa-intermediaria.
+- Cluster 3: menor falencia 45/60, mas maior mortalidade (grupo potencialmente grave por mecanismos nao capturados apenas pela regra 2/3).
+
+Interpretacao fenotipica inicial (MIMIC):
+- Fenotipo hemodinamico/choque franco: clusters com alta falencia_45 e alta falencia_normal.
+- Fenotipo alto risco de obito com menor falencia 2/3: possivel gravidade multiorganica ou trajetorias nao centradas em MAP/lactato.
+- Fenotipos intermediarios: perfis de transicao entre instabilidade circulatoria e compensacao parcial.
+
+============================================================
+6) VALIDACAO EXTERNA K=4 - eICU
+============================================================
+Desfechos por cluster (eICU, K=4):
+ cluster     n  falencia_normal_rate  falencia_45_rate  falencia_60_rate  mortality_rate
+       0 67986              0.103374          0.051967          0.051908        0.113347
+       1 40218              0.305460          0.149460          0.147422        0.109503
+       2 51704              0.133529          0.049745          0.049184        0.067577
+       3 34831              0.190577          0.037093          0.036060        0.052769
+
+Leitura clinica eICU (K=4):
+- Existe estratificacao interna consistente (clusters com gradiente de risco).
+- Magnitude de falencia absoluta eh bem menor que em MIMIC (shift de prevalencia).
+- Mortalidade em eICU apresenta gradiente, mas com ordenacao de clusters nao identica a MIMIC.
+
+============================================================
+6b) VALIDACAO EXTERNA K=4 - NWICU
+============================================================
+Desfechos por cluster (NWICU, K=4):
+ cluster     n  falencia_normal_rate  falencia_45_rate  falencia_60_rate  mortality_rate
+       0  3892              0.382322          0.061474          0.061756        0.232014
+       1   615              0.579675          0.046341          0.045528        0.434146
+       2  8877              0.314875          0.054411          0.054040        0.206601
+       3  4304              0.325753          0.057740          0.057160        0.241868
+
+Leitura clinica NWICU (K=4):
+- Mortalidade global alta (0.229) comparada a MIMIC/eICU.
+- Falencia_45/60 baixa e muito proxima entre clusters; falencia_normal moderada (0.31-0.58).
+- Um cluster pequeno (cluster 1) tem mortalidade muito elevada (0.43) com falencia_45/60 nao alta: perfil possivelmente grave por outras vias clinicas (nao capturadas pela regra 2/3).
+
+============================================================
+7) COMPARACAO DIRETA MIMIC vs eICU (K=4)
+============================================================
+Tabela de comparacao de desfechos (3 falencias + mortalidade):
+ cluster  n_eicu  falencia_normal_rate_eicu  falencia_45_rate_eicu  falencia_60_rate_eicu  mortality_rate_eicu  n_mimic  falencia_normal_rate_mimic  falencia_45_rate_mimic  falencia_60_rate_mimic  mortality_rate_mimic
+       0   67986                   0.103374               0.051967               0.051908             0.113347    12578                    0.832088                0.428208                0.424074              0.073382
+       1   40218                   0.305460               0.149460               0.147422             0.109503    15914                    0.726656                0.235390                0.231683              0.051904
+       2   51704                   0.133529               0.049745               0.049184             0.067577    30687                    0.816046                0.313553                0.309480              0.050412
+       3   34831                   0.190577               0.037093               0.036060             0.052769    13401                    0.594582                0.148123                0.147750              0.134393
+
+Matching por proximidade de desfecho (45min):
+ eicu_cluster  mimic_cluster  eicu_n  mimic_n  eicu_falencia45  mimic_falencia45  eicu_mortality  mimic_mortality  distance
+            0              3   67986    13401         0.051967          0.148123        0.113347         0.134393  0.098433
+            1              3   40218    13401         0.149460          0.148123        0.109503         0.134393  0.024926
+            2              3   51704    13401         0.049745          0.148123        0.067577         0.134393  0.118923
+            3              3   34831    13401         0.037093          0.148123        0.052769         0.134393  0.137805
+
+Matching por proximidade de desfecho (falencia_normal):
+ eicu_cluster  mimic_cluster  eicu_n  mimic_n  eicu_falencia_normal  mimic_falencia_normal  eicu_mortality  mimic_mortality  distance
+            0              3   67986    13401              0.103374               0.594582        0.113347         0.134393  0.491659
+            1              3   40218    13401              0.305460               0.594582        0.109503         0.134393  0.290192
+            2              3   51704    13401              0.133529               0.594582        0.067577         0.134393  0.465870
+            3              3   34831    13401              0.190577               0.594582        0.052769         0.134393  0.412168
+
+Comparacao core previamente calculada:
+ cluster  n_eicu  falencia_eicu  mortality_eicu  n_mimic  falencia_mimic  mortality_mimic
+       0   67986       0.132321        0.113347    12578        0.416680         0.073382
+       1   40218       0.350142        0.109503    15914        0.226844         0.051904
+       2   51704       0.174648        0.067577    30687        0.303809         0.050412
+       3   34831       0.251069        0.052769    13401        0.143497         0.134393
+
+Conclusao de validacao externa:
+- Voce conseguiu reproducao estrutural PARCIAL: os clusters continuam estratificando risco nas duas bases.
+- Reproducao de magnitude foi limitada: falencia em MIMIC >> eICU em todas as definicoes.
+- Mortalidade teve padrao parcialmente alinhado (ha clusters de maior risco em ambas), mas sem mapeamento 1:1 perfeito.
+- Portanto: evidencia de fenotipos transportaveis em estrutura relativa, mas com forte shift de prevalencia/calibracao.
+
+============================================================
+7b) COMPARACAO TRIPLA MIMIC vs eICU vs NWICU (K=4)
+============================================================
+Tabela consolidada de desfechos (arquivo compare_k4_all_datasets_outcomes.csv):
+ dataset cluster     n  mortality_rate  falencia_normal_rate  falencia_45_rate  falencia_60_rate
+   MIMIC       0  12578        0.073382              0.832088          0.428208          0.424074
+   MIMIC       1  15914        0.051904              0.726656          0.235390          0.231683
+   MIMIC       2  30687        0.050412              0.816046          0.313553          0.309480
+   MIMIC       3  13401        0.134393              0.594582          0.148123          0.147750
+    eICU       0  67986        0.113347              0.103374          0.051967          0.051908
+    eICU       1  40218        0.109503              0.305460          0.149460          0.147422
+    eICU       2  51704        0.067577              0.133529          0.049745          0.049184
+    eICU       3  34831        0.052769              0.190577          0.037093          0.036060
+   NWICU       0   3892        0.232014              0.382322          0.061474          0.061756
+   NWICU       1    615        0.434146              0.579675          0.046341          0.045528
+   NWICU       2   8877        0.206601              0.314875          0.054411          0.054040
+   NWICU       3   4304        0.241868              0.325753          0.057740          0.057160
+
+Leitura comparativa:
+- MIMIC tem falencia_45/60 muito mais alta que eICU/NWICU.
+- eICU tem mortalidade intermediaria; NWICU tem mortalidade alta em todos os clusters.
+- NWICU apresenta falencia_45/60 baixa e pouco discriminativa entre clusters, mas falencia_normal mais elevada (0.31-0.58).
+- Sugere que a regra 2/3 pode nao estar calibrada da mesma forma em NWICU ou ha maior ruido/variacao nos sinais usados.
+
+============================================================
+8) EXAMES/FEATURES E DIFERENCAS ENTRE BASES
+============================================================
+Top diferencas absolutas entre features resumidas (arquivo compare_k4_top_diffs.csv):
+           feature  mean_abs_diff
+ glucose_cumul_p99   1.346301e+06
+ glucose_cumul_p90   5.011914e+05
+ glucose_cumul_p50   1.699354e+05
+n_meas_glucose_p99   5.028846e+03
+glucose_instab_p99   4.930738e+03
+n_meas_glucose_p90   2.136000e+03
+glucose_instab_p90   1.916616e+03
+n_meas_glucose_p50   8.427500e+02
+glucose_instab_p50   4.346282e+02
+glucose_intens_p99   2.797002e+02
+   max_glucose_p99   2.002378e+02
+glucose_intens_p90   1.945278e+02
+glucose_intens_p50   1.227676e+02
+   min_glucose_p90   8.500000e+01
+   min_glucose_p50   8.150000e+01
+   max_glucose_p90   8.037041e+01
+   max_glucose_p50   4.645336e+01
+      mean_glucose   4.548240e+01
+  mean_glucose_p25   4.418421e+01
+   min_glucose_p99   3.573204e+01
+
+Observacao critica: as maiores diferencas estao em features de cumulativo/escala (ex.: glucose_cumul_*), muito sensiveis a densidade amostral e duracao da serie.
+Isso pode dominar distancia e prejudicar comparacao clinica direta se nao houver normalizacao por tempo/numero de medidas.
+
+============================================================
+9) FENOTIPOS (SINTETICO, K=4)
+============================================================
+Resumo fenotipico consolidado atual:
+ cluster     n  falencia  mortality phenotype dataset
+       0 67986  0.132321   0.113347     mixed    eicu
+       1 40218  0.350142   0.109503     mixed    eicu
+       2 51704  0.174648   0.067577     mixed    eicu
+       3 34831  0.251069   0.052769     mixed    eicu
+       0 12578  0.416680   0.073382     mixed   mimic
+       1 15914  0.226844   0.051904     mixed   mimic
+       2 30687  0.303809   0.050412     mixed   mimic
+       3 13401  0.143497   0.134393     mixed   mimic
+       0  3892  0.382322   0.232014     mixed   nwicu
+       1   615  0.579675   0.434146     mixed   nwicu
+       2  8877  0.314875   0.206601     mixed   nwicu
+       3  4304  0.325753   0.241868     mixed   nwicu
+
+Proposta de rotulos clinicos (para manuscrito/apresentacao):
+- Fenotipo A (choque circulatorio alto): alta falencia_45/falencia_normal; risco hemodinamico predominante.
+- Fenotipo B (alto risco de obito com baixa falencia 2/3): mortalidade alta com falencia 2/3 relativamente baixa.
+- Fenotipo C (intermediario): risco moderado em ambos desfechos.
+- Fenotipo D (baixo risco relativo): menor mortalidade e menor falencia relativa.
+
+Importante: o nome final do fenotipo deve ser fechado apos checagem de sinais/labs-chave por cluster (mediana + IQR + p90/p99) e, idealmente, testes estatisticos entre clusters.
+
+============================================================
+10) O QUE JA ESTA FORTE NO SEU TRABALHO
+============================================================
+- Pipeline temporal funcional em duas bases independentes.
+- Clustering K=2..6 e justificativa de escolha de K (metrica + clinica).
+- Desfechos multiplos de falencia (normal/45/60) + mortalidade por cluster.
+- Validacao externa real (nao apenas split interno).
+
+============================================================
+11) LIMITACOES TECNICAS/CLINICAS
+============================================================
+- Shift de prevalencia muito alto entre MIMIC e eICU (especialmente falencia_normal).
+- Features cumulativas podem inflar diferencas de escala entre bases.
+- Mapeamento de labs entre MIMIC e eICU nao e 1:1 para todas as variaveis.
+- Clusters nao supervisionados nao garantem causalidade, apenas estratificacao de perfis.
+
+============================================================
+12) PLANO DE ESTUDO (APROVACAO) - PROXIMAS ETAPAS RECOMENDADAS
+============================================================
+Fase 1 (fechar analise atual):
+1. Fixar K=4 como analise principal e K=3/K=5 como sensibilidade.
+2. Reportar por cluster: n, mortalidade, falencia_normal, falencia_45, falencia_60.
+3. Reportar top variaveis por cluster com mediana, IQR, p90/p99.
+4. Incluir tabela de matching de clusters entre bases por distancia de desfecho.
+
+Fase 2 (robustez estatistica):
+5. Bootstrap por cluster para IC95% de desfechos.
+6. Testes entre clusters (Kruskal-Wallis + Dunn/Bonferroni para variaveis continuas; qui-quadrado para binarias).
+7. Sensibilidade removendo features cumulativas ou normalizando por tempo.
+
+Fase 3 (validacao externa forte):
+8. Repetir matching usando somente conjunto de variaveis harmonizadas entre bases.
+9. Avaliar estabilidade de cluster com seeds diferentes.
+10. Produzir figura de radar/heatmap para fenotipos MIMIC vs eICU.
+
+============================================================
+13) CONCLUSAO EXECUTIVA
+============================================================
+Sim, voce encontrou fenotipos utilmente distintos em MIMIC e mostrou validacao externa parcial em eICU.
+A mensagem cientifica mais correta hoje eh:
+"Os fenotipos temporais de falencia circulatoria mostram estrutura reprodutivel entre bases, com deslocamento importante de prevalencia e calibracao de risco."
+
+Para uma versao de artigo/tese, o proximo ganho vem de harmonizacao de variaveis/labs e de medidas de incerteza (IC/bootstrap), nao de rerodar pipeline do zero. Em NWICU, priorize revisar calibracao da regra 2/3 e avaliar se a definicao de falencia necessita ajuste.

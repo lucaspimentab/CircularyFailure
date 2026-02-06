@@ -1,0 +1,48 @@
+dataset: eicu
+input_dir: ${DATA_DIR}/eicu
+features_dir: ${OUTPUT_DIR}/eicu/preprocess/batches/features_filtered
+output_dir: ${OUTPUT_DIR}/eicu
+columns:
+  id_col: patientunitstayid
+  time_col: offset_min
+  mbp_col: systemicmean
+  vaso_col: vasopressor_ativo
+  lactate_col: lactate
+  falencia_col: falencia
+features:
+  keep_cols_file: src/datasets/eicu/metadata/columns_list_eicu.csv
+  drop_suffixes:
+  - _imputed
+  drop_cols:
+  - patientunitstayid
+  - offset_min
+  - falencia
+  - mortality
+  - falencia_point
+  - falencia_any
+  engineered:
+    enabled: true
+    dir: ${OUTPUT_DIR}/eicu/preprocess/engineered_features
+    patterns:
+    - n_meas_
+    - min_
+    - max_
+    - mean_
+    - _instab
+    - _intens
+    - _cumul
+    agg: last
+    drop_cols:
+    - patientunitstayid
+    - offset_min
+    - falencia
+    - mortality
+    - falencia_point
+    - falencia_any
+minirocket:
+  use_engineered: true
+
+etl:
+  h5: ${OUTPUT_DIR}/eicu/preprocess/h5/dataset_eicu.h5
+  windowed_h5: ${OUTPUT_DIR}/eicu/preprocess/h5/dataset_eicu_windowed.h5
+

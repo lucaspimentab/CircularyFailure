@@ -1,0 +1,33 @@
+﻿seed: 43
+output_dir: ${OUTPUT_DIR}
+minirocket:
+  n_kernels: 1024
+  fit_stays: 50000
+  batch_size: 128
+  kmeans_epochs: 10
+  kmeans_batch: 4096
+  pca_dim: 50
+  pca_sample: 100000
+falencia:
+  step_min_45: 5
+  window_min_45: 45
+  step_min_60: 60
+  window_min_60: 60
+features:
+  keep_cols_file: null
+  drop_suffixes:
+  - _imputed
+  drop_cols: []
+  engineered:
+    enabled: false
+    dir: null
+    patterns:
+    - n_meas_
+    - min_
+    - max_
+    - mean_
+    - _instab
+    - _intens
+    - _cumul
+    agg: last
+    drop_cols: []
