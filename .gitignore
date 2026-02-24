@@ -40,9 +40,25 @@ Thumbs.db
 !outputs/
 !outputs/*/
 !outputs/*/reports/
-!outputs/*/reports/**
+!outputs/*/reports/**/*.csv
+!outputs/*/reports/**/*.json
+!outputs/*/reports/**/*.txt
+!outputs/*/reports/**/*.md
+!outputs/*/reports/**/*.png
+!outputs/*/reports/**/*.pdf
 !outputs/*/clustering/
 !outputs/*/clustering/minirocket/
 !outputs/*/clustering/minirocket/clusters_minirocket/
 !outputs/*/clustering/minirocket/clusters_minirocket/*.csv
 !outputs/*/clustering/minirocket/clusters_minirocket/*.json
+
+# Never publish heavy artifacts even under report-like folders
+outputs/*/reports/**/cache_perstay/**
+outputs/*/reports/**/*.parquet
+outputs/*/reports/**/*.h5
+outputs/*/reports/**/*.hdf5
+outputs/*/reports/**/*.npy
+outputs/*/reports/**/*.npz
+outputs/*/reports/**/*.pt
+outputs/*/reports/**/*.pth
+outputs/*/reports/**/*.ckpt
