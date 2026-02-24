@@ -4,20 +4,28 @@ __pycache__/
 *.pyo
 *.pyd
 *.so
+.pytest_cache/
 
-# Env
+# Environment / secrets
 .env
 .env.*
+!.env.example
 
-# Jupyter
+# Notebooks
 .ipynb_checkpoints/
 
-# Data / outputs (kept in repo per current request)
-/data/
-/outputs/**
-/_archive_local/
+# Data and generated artifacts (local only)
+data/**
+outputs/**
+reports/**
+runs/**
 
-# Large data formats (kept in repo per current request)
+# Keep only placeholder docs in git
+!data/README.md
+!outputs/README.md
+!reports/README.md
+
+# Heavy binary formats
 *.h5
 *.hdf5
 *.parquet
@@ -26,39 +34,15 @@ __pycache__/
 *.pt
 *.pth
 *.ckpt
+*.onnx
+*.joblib
+*.pkl
 
-# Logs (kept in repo per current request)
+# Logs
 *.log
 
 # OS
 .DS_Store
 Thumbs.db
-
-!.env.example
-
-# Allow publishable outputs (metrics/figures only)
-!outputs/
-!outputs/*/
-!outputs/*/reports/
-!outputs/*/reports/**/*.csv
-!outputs/*/reports/**/*.json
-!outputs/*/reports/**/*.txt
-!outputs/*/reports/**/*.md
-!outputs/*/reports/**/*.png
-!outputs/*/reports/**/*.pdf
-!outputs/*/clustering/
-!outputs/*/clustering/minirocket/
-!outputs/*/clustering/minirocket/clusters_minirocket/
-!outputs/*/clustering/minirocket/clusters_minirocket/*.csv
-!outputs/*/clustering/minirocket/clusters_minirocket/*.json
-
-# Never publish heavy artifacts even under report-like folders
-outputs/*/reports/**/cache_perstay/**
-outputs/*/reports/**/*.parquet
-outputs/*/reports/**/*.h5
-outputs/*/reports/**/*.hdf5
-outputs/*/reports/**/*.npy
-outputs/*/reports/**/*.npz
-outputs/*/reports/**/*.pt
-outputs/*/reports/**/*.pth
-outputs/*/reports/**/*.ckpt
+.vscode/
+.idea/
