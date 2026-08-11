@@ -1,0 +1,14 @@
+.env
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+output/
+outputs/
+*.h5
+*.hdf5
+*.parquet
+
+data/subject_stay_map.csv
+data/*stay_id*.csv
+data/*patient*.csv
